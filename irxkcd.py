@@ -11,7 +11,7 @@ import redis
 comment_template = """[irrelevant xkcd]({url})
 
 
-^(If the linked comic is in fact relevant, I appologize. I'm just a bot!)
+^(If the linked comic is in fact relevant, I appologize. I'm just a bot! | [github](https://github.com/davish/irrelevant-xkcd))
 """
 
 
