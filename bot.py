@@ -68,7 +68,7 @@ if __name__ == '__main__':
                   username=u,
                   password=p)
 
-  msg = 'irrelevant xkcd bot starting up! Comics 1-{} will be served.'.format(r.get('most_recent'))
+  msg = 'irrelevant xkcd bot starting up! Comics 1-{} will be served to subreddit {}.'.format(r.get('most_recent'), subreddit)
   print msg
   logging.info(msg)
 
