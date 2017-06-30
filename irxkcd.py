@@ -2,6 +2,7 @@ import random
 import os
 import re
 import logging
+import datetime
 
 import praw
 import requests
@@ -29,11 +30,26 @@ mode = os.getenv('BOT_MODE', 'development')
 
 subreddit = 'all' if mode == 'production' else 'irxkcdbot'
 
+def get_new_comics():
+  r.set('most_recent', requests.get('https://xkcd.com/info.0.json').json().get('num'))
+  r.set('last_update', datetime.date.today())
+  logging.info('updated most recent comic to %s', r.get('most_recent'))
+
+def check_for_new_comics():
+  if r.get('last_update') is not None and r.get('most_recent') is not None:
+    last_update = datetime.date(*map(lambda s: int(s), r.get('last_update').split('-')))
+    if datetime.date.today() - last_update > datetime.timedelta(0):
+      get_new_comics()
+  else:
+    get_new_comics()
+
 def respond_to_comment(comment, reply_to):
+  check_for_new_comics()
+
   parent_id = reply_to.fullname 
   child_id = comment.fullname
 
-  comic = url.format(num=random.randint(1, most_recent))
+  comic = url.format(num=random.randint(1, int(r.get('most_recent'))))
   logging.info('responding to comment %s with comic %s', parent_id, comic)
   try:
     reply_to.reply(comment_template.format(url=comic))
@@ -44,7 +60,7 @@ def respond_to_comment(comment, reply_to):
 
 
 if __name__ == '__main__':
-  most_recent = requests.get('https://xkcd.com/info.0.json').json().get('num')
+  check_for_new_comics()
 
   bot = praw.Reddit(user_agent='irrelevant-xkcd_bot v0.1',
                   client_id='P_0YD6qB3ysJOQ',
@@ -52,11 +68,11 @@ if __name__ == '__main__':
                   username=u,
                   password=p)
 
-  msg = 'irrelevant xkcd bot starting up! Comics 1-{} will be served.'.format(most_recent)
+  msg = 'irrelevant xkcd bot starting up! Comics 1-{} will be served.'.format(r.get('most_recent'))
   print msg
   logging.info(msg)
 
-  for comment in bot.subreddit('irxkcdbot').stream.comments():
+  for comment in bot.subreddit(subreddit).stream.comments():
     s = comment.body.lower()
     if pattern.search(s) and not notpattern.search(s):
       # We're responding to the parent here, the "child" is the 'relevant xkcd' link, the parent is the material with the relevant xkcd
